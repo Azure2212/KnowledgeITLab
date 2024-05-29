@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Thông tin người dùng</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}"/>
+    <script th:inline="javascript">
+        function handleClick() {
+            document.getElementById('submitButton').setAttribute('disabled', 'true');
+            document.getElementById('submitButton').innerHTML = 'Processing...';
+            return true;
+        }
+    </script>
+</head>
+<body>
+<!--Header-->
+<div th:replace="UI/pages/util/header/header.html :: header"></div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{viewUploadPage}">
+                            Tài liệu đã đăng
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{viewWaitingUploadPage}">
+                            Tài liệu chờ duyệt
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{viewDeleteArticlePage(paperStatus='DELETED')}">
+                            Tài liệu đã xóa sau khi đăng
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{viewDeleteArticlePage(paperStatus='REFUSE')}">
+                            Tài liệu đã từ chối cho đăng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{../userList}">
+                            Danh sách người dùng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{../login}">
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <br><br>
+        <!-- Main content -->
+        <!--Cac bai viet cua nguoi dung trong tai khoan nay        -->
+        <main role="main" class="col-md-12 ml-sm-auto col-lg-10 px-4 content-wrapper">
+            <h2 class="mt-3">Thông Tin Người Dùng</h2>
+            <form method="post" th:action="@{/updateUserInformation}" enctype="multipart/form-data"
+                  th:object="${infoUser}" onsubmit="return handleClick()">
+                <div class="form-container">
+                    <div>
+                        <img style="margin-left: 2%"
+                             th:src="${infoUser.avatar.replace('https://github.com', 'https://raw.githubusercontent.com').replace('/blob/', '/')}"
+                             class="avatar" alt="avatar"/>
+                        <div class="form-group">
+                            <button type="submit" style="width: 100%; height: 10%; font-size: 15px; margin-left: 1%"
+                                    class="btn btn-success" id="submitButton"
+                                    th:if="${isEditable != null and isEditable == true}">Chỉnh sửa
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-content">
+                        <!-- Row for Username and Password -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="username">Username:</label>
+                                <input type="text" class="form-control w-100" id="username" name="username"
+                                       th:value="${infoUser.username}" required readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="fullname">Tên đầy đủ:</label>
+                                <input type="text" class="form-control w-100" id="fullname" name="fullname"
+                                       th:value="${infoUser.fullName}" required readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="role">Vị trí:</label>
+                                <input type="text" class="form-control w-100" id="role" name="role"
+                                       th:value="${role[infoUser.role]}"
+                                       required readonly>
+                            </div>
+                        </div>
+                        <!-- Row for Gmail and Birthday -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="birthday">Birthday:</label>
+                                <input type="text" class="form-control w-100" id="birthday" name="birthday"
+                                       th:value="${infoUser.birthday}" required readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastPaper">Ngày đăng gần nhất:</label>
+                                <input type="text" class="form-control w-100" id="lastPaper" name="birthday"
+                                       th:value="${infoUser.lastUserCreated}" required readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="flag">Tình trạng:</label>
+                                <input type="text" class="form-control w-100" id="flag" name="flag"
+                                       th:value="${flag[infoUser.flagUser]}" required readonly>
+                            </div>
+                        </div>
+
+
+                        <!-- Row for email, password -->
+                        <div class="form-row" th:if="${isEditable}">
+                            <div class="form-group">
+                                <label for="gmail">Gmail:</label>
+                                <input type="text" class="form-control w-100" id="gmail" name="gmail"
+                                       th:value="${infoUser.gmail}"
+                                       required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">mật khẩu:</label>
+                                <input type="password" class="form-control w-100" id="password" name="password"
+                                       th:value="${infoUser.password}" required>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <input type="hidden" th:value="${infoUser.id}" id="idUser" name="idUser">
+            </form>
+
+            <h2 class="mt-3">Các bài viết của bạn</h2>
+            <div class="table-container-information-user">
+                <table class="table table-dark">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th th:each="column : ${columnName}" th:text="${column}"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row, rowStat : ${data}">
+                        <td th:text="${rowStat.count}"></td>
+                        <td th:each="value, colState : ${row}">
+                            <span th:if="${value.startsWith('https://')}">
+                                <a th:href="@{detailPaperPage(gitUrl=${idPapers[rowStat.index]})}" target="_blank"
+                                   rel="noopener noreferrer" th:text="${'https://' + idPapers[rowStat.index]}"
+                                   style="color: white"></a>
+                            </span>
+                            <span th:unless="${value.startsWith('https://')}" th:text="${row[colState.index]}"></span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!--Footer-->
+<div th:replace="UI/pages/util/footer/footer.html :: footer"></div>
+
+<style>
+    /*INFORMATION USER*/
+    .avatar {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        margin-bottom: 15px;
+        border-radius: 6px;
+    }
+
+    .form-container {
+        width: 40vw;
+        display: flex;
+        justify-content: left;
+        gap: 20px;
+        background-color: #dddddd;
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+    .form-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 10px;
+    }
+
+    .form-group {
+        flex: 1;
+    }
+
+/*    Table mini*/
+    .table-container-information-user {
+        height: 550px;
+        overflow-y: auto;
+    }
+</style>
+<!-- Load Thymeleaf JavaScript if you need live reload -->
+</body>
+</html>

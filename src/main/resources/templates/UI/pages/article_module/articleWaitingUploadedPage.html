@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Welcome</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}"/>
+</head>
+<body>
+<!--Header-->
+<div th:replace="UI/pages/util/header/header.html :: header"></div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{viewUploadPage}">
+                            Tài liệu đã đăng
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link active" th:href="@{viewWaitingUploadPage}">
+                            Tài liệu chờ duyệt
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{viewDeleteArticlePage(paperStatus='DELETED')}">
+                            Tài liệu đã xóa sau khi đăng
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{viewDeleteArticlePage(paperStatus='REFUSE')}">
+                            Tài liệu đã từ chối cho đăng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{../userList}">
+                            Danh sách người dùng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{../login}">
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <br><br>
+        <!-- Main content -->
+        <main role="main" class="col-md-12 ml-sm-auto col-lg-10 px-4 content-wrapper">
+            <div class="wrapper-content">
+                <h1 class="title-content" th:text="${title}"></h1>
+            </div>
+            <br>
+            <div class="table-container">
+                <table class="table table-dark">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th th:each="column : ${columnName}" th:text="${column}"></th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row, rowStat : ${data}">
+                        <td th:text="${rowStat.count}"></td>
+                        <td th:each="value, colState : ${row}">
+                            <span th:if="${value.startsWith('https://')}">
+                                <a th:href="@{detailPaperPage(gitUrl=${idPapers[rowStat.index]})}" target="_blank"
+                                   rel="noopener noreferrer" th:text="${'https://' + idPapers[rowStat.index]}"
+                                   style="color: white"></a>
+                            </span>
+                            <span th:unless="${value.startsWith('https://')}" th:text="${row[colState.index]}"></span>
+                        </td>
+                        <td>
+                            <div class="dropdown" th:if="${editRight != null and editRight == true}">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <li><a class="dropdown-item"
+                                           th:href="@{viewHistoryPage(idPaper = ${idPapers[rowStat.index]})}">Thông tin
+                                        tác giả</a></li>
+                                    <li><a class="dropdown-item"
+                                           th:href="@{deletePaper(idPaper = ${idPapers[rowStat.index]})}"> Xóa</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!--Footer-->
+<div th:replace="UI/pages/util/footer/footer.html :: footer"></div>
+
+<!-- Load Thymeleaf JavaScript if you need live reload -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/thymeleaf/3.0.12.RELEASE/thymeleaf.js"></script>
+</body>
+</html>

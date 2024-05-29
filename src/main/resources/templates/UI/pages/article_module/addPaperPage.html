@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Paper</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}"/>
+    <script th:inline="javascript">
+        function handleClick() {
+            document.getElementById('submitButton').setAttribute('disabled', 'true');
+            document.getElementById('submitButton').innerHTML = 'Processing...';
+            return true;
+        }
+    </script>
+</head>
+<body>
+<!--HEADER-->
+<div th:replace="UI/pages/util/header/header.html :: header"></div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{viewUploadPage}">
+                            Tài liệu đã đăng
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{viewWaitingUploadPage}">
+                            Tài liệu chờ duyệt
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{viewDeleteArticlePage(paperStatus='DELETED')}">
+                            Tài liệu đã xóa sau khi đăng
+                        </a>
+                    </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{viewDeleteArticlePage(paperStatus='REFUSE')}">
+                            Tài liệu đã từ chối cho đăng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{../userList}">
+                            Danh sách người dùng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{../login}">
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <br>
+        <!-- Main content -->
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4 content-wrapper mt-5">
+            <div class="article-form-container">
+                <h2 class="mb-3">Tạo Bài Viết Của Bạn</h2>
+                <form action="#" th:action="@{/articlePage/upload}" th:object="${paper}" enctype="multipart/form-data"
+                      method="post" onsubmit="return handleClick()">
+                    <div class="article-form-group">
+                        <label for="namePaper">Tên bài viết</label>
+                        <input name="namePaper" type="text" class="form-control" id="namePaper"
+                               th:value="${paper.namePaper}" placeholder="Tên bài viết của bạn" required>
+                    </div>
+                    <div class="article-form-group">
+                        <label for="authorName">Tên tác giả</label>
+                        <input name="author.fullName" type="text" class="form-control" id="authorName"
+                               th:value="${paper.author.fullName}" oninput="this.setAttribute('readonly', 'readonly');"
+                               readonly>
+                    </div>
+                    <div class="article-form-group">
+                        <label for="dateCreated">Ngày tạo</label>
+                        <input type="datetime-local" class="form-control" id="dateCreated" name="dateCreated"
+                               th:value="${paper.dateCreated}" oninput="this.setAttribute('readonly', 'readonly');"
+                               readonly>
+                    </div>
+                    <div class="article-form-group">
+                        <label for="category">Thể loại</label>
+                        <select class="form-control" id="category" name="categoryPaper">
+                            <option th:each="entry : ${CategoryPapers}" th:value="${entry.key}"
+                                    th:text="${entry.value}"></option>
+                        </select>
+                    </div>
+                    <div class="article-form-group">
+                        <label for="uploadFile">Tải tệp lệnh (.PDF)</label>
+                        <input type="file" class="form-control-file" id="uploadFile" name="img"
+                               onchange="updatePaperUrl()" required>
+                    </div>
+                    <input type="hidden" id="role" name="author.role" th:value="${paper.author.role}">
+                    <button type="submit" id="submitButton" class="btn btn-primary" style="width: 300px; margin: 0 auto; display: block">Submit</button>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!--Footer-->
+<div th:replace="UI/pages/util/footer/footer.html :: footer"></div>
+
+<script>
+    function updatePaperUrl() {
+        var fileInput = document.getElementById('uploadFile');
+        var paperUrlInput = document.getElementById('paperUrl');
+
+        if (fileInput.files.length > 0) {
+            // Get the first file uploaded by the user
+            var file = fileInput.files[0];
+            // Update the value of paperUrl input field with the file's name
+            paperUrlInput.value = file.name;
+        } else {
+            paperUrlInput.value = ''; // If no file selected, clear the value
+        }
+    }
+</script>
+
+<style>
+    /*ADD WRAPPER PAPER*/
+    .article-form-container {
+        width: 50%;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        margin: 0 auto;
+    }
+
+    .article-form-container h2 {
+        text-align: center;
+        color: #333;
+    }
+
+    .article-form-group {
+        margin-bottom: 15px;
+    }
+
+    .article-form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+    }
+
+    .article-form-group .form-control,
+    .article-form-group .form-control-file,
+    .article-form-group .btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+
+    .article-form-group .form-control:focus,
+    .article-form-group .form-control-file:focus,
+    .article-form-group .btn:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+    .article-form-group .btn {
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .article-form-group .btn:hover {
+        background-color: #0056b3;
+    }
+</style>
+</body>
+</html>

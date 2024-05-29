@@ -1,0 +1,35 @@
+<div th:fragment="chatbox">
+    <!DOCTYPE html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Chat box</title>
+        <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}"/>
+    </head>
+    <body>
+    <div class="chat-container">
+        <div class="chat-box">
+            <div class="message user1">
+                <div class="avatar">user1</div>
+                <div class="text">Xin chào!</div>
+            </div>
+            <div class="message user2">
+                <div class="avatar">user2</div>
+                <div class="text">Chào bạn!</div>
+            </div>
+            <div class="message user1">
+                <div class="avatar">User</div>
+                <div class="text">Bạn yếu quá</div>
+            </div>
+            <div class="message user2">
+                <div class="avatar">User2</div>
+                <div class="text">CÓ cái cc</div>
+            </div>
+        </div>
+        <div class="input-box">
+            <input type="text" placeholder="Nhập tin nhắn...">
+            <button>Gửi</button>
+        </div>
+    </div>
+    </body>
+</div>
+

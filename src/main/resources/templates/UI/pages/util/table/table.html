@@ -1,0 +1,71 @@
+<!--<div th:fragment="table">-->
+<!--    <!DOCTYPE html>-->
+<!--    <html xmlns:th="http://www.thymeleaf.org">-->
+<!--    <html lang="en">-->
+<!--    <head>-->
+<!--        <meta charset="UTF-8">-->
+<!--        <title>Title</title>-->
+<!--    </head>-->
+<!--    <body>-->
+<!--    <div style="color: #007bff">-->
+<!--        <table class="table table-dark">-->
+<!--            <thead>-->
+<!--            <tr>-->
+<!--                <th>#</th>-->
+<!--                <th th:each="column : ${columnName}" th:text="${column}"></th>-->
+<!--                <th></th>-->
+<!--            </tr>-->
+<!--            </thead>-->
+<!--            <tbody>-->
+<!--            <tr th:each="row, rowStat : ${data}">-->
+<!--                <td th:text="${rowStat.count}"></td>-->
+<!--                <td th:each="value, colState : ${row}">-->
+<!--                <span th:if="${value.startsWith('https://')}">-->
+<!--                    <a th:href="@{detailPaperPage(gitUrl=${idPapers[rowStat.index]})}" target="_blank"-->
+<!--                       rel="noopener noreferrer" th:text="${'https://' + idPapers[rowStat.index]}"-->
+<!--                       style="color: white"></a>-->
+<!--                </span>-->
+<!--                    <span th:unless="${value.startsWith('https://')}" th:text="${row[colState.index]}"></span>-->
+<!--                </td>-->
+<!--                <td>:</td>-->
+<!--            </tr>-->
+<!--            </tbody>-->
+<!--        </table>-->
+<!--    </div>-->
+<!--    </body>-->
+<!--    </html>-->
+
+<!--    <script th:inline="javascript">-->
+<!--        function openPDF(pdfPath) {-->
+<!--            window.open(pdfPath, '_blank');-->
+<!--        }-->
+<!--    </script>-->
+
+<!--</div>-->
+
+
+<div th:fragment="table">
+    <table class="table table-dark">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th th:each="column : ${columnName}" th:text="${column}"></th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row, rowStat : ${data}">
+            <td th:text="${rowStat.count}"></td>
+            <td th:each="value, colState : ${row}">
+                <span th:if="${value.startsWith('https://')}">
+                    <a th:href="@{detailPaperPage(gitUrl=${idPapers[rowStat.index]})}" target="_blank"
+                       rel="noopener noreferrer" th:text="${'https://' + idPapers[rowStat.index]}"
+                       style="color: white"></a>
+                </span>
+                <span th:unless="${value.startsWith('https://')}" th:text="${row[colState.index]}"></span>
+            </td>
+            <td>:</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
