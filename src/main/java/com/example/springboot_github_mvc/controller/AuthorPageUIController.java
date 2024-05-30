@@ -38,6 +38,11 @@ public class AuthorPageUIController {
 
     private final IUserService userService;
 
+    @GetMapping("")
+    public String initialAppView(){
+        return "redirect:/login";
+    }
+
     @GetMapping("login")
     public String viewLoginPage(HttpSession session, Model model, @RequestParam(required = false) String error) {
         try {
