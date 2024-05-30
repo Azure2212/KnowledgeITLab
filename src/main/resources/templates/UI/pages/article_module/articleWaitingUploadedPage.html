@@ -88,6 +88,8 @@
                                            th:href="@{viewHistoryPage(idPaper = ${idPapers[rowStat.index]})}">Thông tin
                                         tác giả</a></li>
                                     <li><a class="dropdown-item"
+                                           th:href="@{acceptUploadPaper(idPaper = ${idPapers[rowStat.index]})}">Duyệt</a></li>
+                                    <li><a class="dropdown-item"
                                            th:href="@{deletePaper(idPaper = ${idPapers[rowStat.index]})}"> Xóa</a></li>
                                 </ul>
                             </div>

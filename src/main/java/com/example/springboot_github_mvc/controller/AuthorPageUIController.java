@@ -8,6 +8,8 @@ import com.example.springboot_github_mvc.repository.GitHubRepository;
 import com.example.springboot_github_mvc.service.IUserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
@@ -16,7 +18,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -30,16 +31,15 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-@SessionAttributes("user")
 @Controller
 @RequiredArgsConstructor
 public class AuthorPageUIController {
 
-
+    private static final Logger logger = LoggerFactory.getLogger(AuthorPageUIController.class);
     private final IUserService userService;
 
     @GetMapping("")
-    public String initialAppView(){
+    public String initialAppView() {
         return "redirect:/login";
     }
 
@@ -47,13 +47,16 @@ public class AuthorPageUIController {
     public String viewLoginPage(HttpSession session, Model model, @RequestParam(required = false) String error) {
         try {
             //GitHubRepository.removeDB();
-            GitHubRepository.removeDB().thenAccept(result -> {
-            });
+//            GitHubRepository.removeDB().thenAccept(result -> {
+//            });
             SystemPageUIController.removeUser(session);
-            //String errorCode = error == null ? "" : error;
+
+            boolean check = GitHubRepository.setup();
+            if (!check) return "redirect:/system/error404";
             model.addAttribute("error", error);
             return "UI/pages/loginPage";
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "UI/pages/loginPage";
         }
     }
@@ -83,6 +86,7 @@ public class AuthorPageUIController {
             return "UI/pages/article_module/userListPage";
 
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -134,8 +138,8 @@ public class AuthorPageUIController {
             Files.copy(img.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             String directoryName = filePath.getParent().toString();
-            String oldFile = directoryName + "\\" + fileName;
-            String newFile = directoryName + "\\" + username + "_avatar" + "." + fileExtension;
+            String oldFile = directoryName + File.separator + fileName;
+            String newFile = directoryName + File.separator + username + "_avatar" + "." + fileExtension;
             Resource oldResource = new FileSystemResource(oldFile);
             Resource newResource = new FileSystemResource(newFile);
             if (oldResource.getFile().renameTo(newResource.getFile())) {
@@ -147,11 +151,11 @@ public class AuthorPageUIController {
 
             Path destinationPath = Paths.get(enviroment.avatarUrl);
             if (!checkIfPageNameExist(avatarUrl, destinationPath)) {
-                newUser.setAvatar(enviroment.gitHub_userAvatar_Url + "/" + avatarUrl);
+                newUser.setAvatar(enviroment.gitHub_userAvatar_Url + File.separator + avatarUrl);
                 UserDto rs = userService.addUser(newUser);
                 if (rs == null) return "redirect:/login?error=4";
                 Path sourcePath = Paths.get(newFile);
-                String destinationFilePath = destinationPath + "\\" + avatarUrl;
+                String destinationFilePath = destinationPath + File.separator + avatarUrl;
                 destinationPath = Paths.get(destinationFilePath);
                 Files.copy(sourcePath, destinationPath);
                 GitHubRepository.push2Git("add paper", newUser.getFullName());
@@ -160,6 +164,7 @@ public class AuthorPageUIController {
                 return "redirect:/login?error=4";
             }
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/login?error=3";
         }
 
@@ -169,9 +174,8 @@ public class AuthorPageUIController {
     @PostMapping("checkLogin")
     public String checkLogin(@RequestParam String username, @RequestParam String password, Model model, HttpSession session) {
         try {
-            GitHubRepository.removeDB().thenAccept(result -> {
-            });
-            //GitHubRepository.removeDB();
+            boolean check = GitHubRepository.setup();
+            if (!check) return "redirect:/system/error404";
             SystemPageUIController.removeUser(session);
             GitHubRepository.setup();
             UserDto user = userService.checkLogin(username, password);
@@ -189,6 +193,7 @@ public class AuthorPageUIController {
             GitHubRepository.push2Git("update user", "azure");
             return "redirect:/articlePage/viewUploadPage";
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -207,6 +212,7 @@ public class AuthorPageUIController {
             if (user == null) return "redirect:/system/error404";
             return "redirect:/userList";
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -244,6 +250,7 @@ public class AuthorPageUIController {
             GitHubRepository.push2Git("update User paper", "unknow");
             return "redirect:/userList";
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -258,7 +265,7 @@ public class AuthorPageUIController {
         Collections.sort(users, Comparator.comparingInt((UserDto user) -> user.getPapers().size()).reversed());
         for (int i = 0; i < users.size(); i++) {
             UserDto user = users.get(i);
-            String avatar = user.getAvatar().replace("https://github.com", "https://raw.githubusercontent.com").replace("/blob/", "/");
+            String avatar = user.getAvatar().replace("https://github.com", "https://raw.githubusercontent.com").replace("/blob/", File.separator);
             data.add(List.of(avatar, user.getFullName(), SystemPageUIController.roleUser.get(user.getRole()), user.getBirthday().toString(), SystemPageUIController.flagUser.get(user.getFlagUser()),
                     String.valueOf(user.getPapers().size()), user.getLastUpdated().toString()));
             //shortUrl.add("https://" + paper.getId());
@@ -283,7 +290,7 @@ public class AuthorPageUIController {
 
     private boolean checkIfPageNameExist(String nameFile, Path destinationPath) {
         try {
-            String filePath = destinationPath.toFile().getPath().toString() + "\\" + nameFile;
+            String filePath = destinationPath.toFile().getPath().toString() + File.separator + nameFile;
             File file = new File(filePath);
             if (file.exists()) {
                 System.out.println("File path exists.");
@@ -293,6 +300,7 @@ public class AuthorPageUIController {
                 return false;
             }
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return false;
         }
     }
@@ -309,6 +317,7 @@ public class AuthorPageUIController {
             if (user.getFlagUser().equals(FlagUser.BAN_FOREVER_FOREVER)) return 2; // banned forever!
             return 1;
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return 3;
         }
     }

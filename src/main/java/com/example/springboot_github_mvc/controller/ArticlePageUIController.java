@@ -12,7 +12,8 @@ import com.example.springboot_github_mvc.service.IPaperService;
 import com.example.springboot_github_mvc.service.IUserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @RequestMapping(path = "/articlePage")
 public class ArticlePageUIController {
+    private static final Logger logger = LoggerFactory.getLogger(ArticlePageUIController.class);
     private final IPaperService paperService;
     private final IUserService userService;
 
@@ -71,6 +73,7 @@ public class ArticlePageUIController {
             model.addAttribute("sidebarIndex", "0");
             return "UI/pages/article_module/articleUploadedPage";
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -87,6 +90,7 @@ public class ArticlePageUIController {
             model.addAttribute("sidebarIndex", (status.equals(PaperStatus.DELETED)) ? "2" : "3");
             return "UI/pages/article_module/article_delete_refuse_page";
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -102,6 +106,26 @@ public class ArticlePageUIController {
             model.addAttribute("sidebarIndex", "1");
             return "UI/pages/article_module/articleWaitingUploadedPage";
         } catch (Exception e) {
+            logger.error(e.getMessage());
+            return "redirect:/system/error404";
+        }
+    }
+
+    @GetMapping("acceptUploadPaper")
+    public String viewHistoryPage(Model model, HttpSession session, @RequestParam String idPaper){
+        try{
+            UserDto user = SystemPageUIController.getUserSession(session);
+            if (user == null)
+                return "redirect:/login";
+            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            PaperDto paper = paperService.getPaperById(idPaper);
+            if(paper == null) return "redirect:/login";
+            paper.setStatus(PaperStatus.ACCEPT);
+            paper = paperService.updatePaper(paper);
+            GitHubRepository.push2Git("accept upload paper!", user.getFullName());
+            return "redirect:/articlePage/viewUploadPage";
+        }catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -130,6 +154,7 @@ public class ArticlePageUIController {
             //return "UI/pages/article_module/history_articles_page/history_articles_page";
             return "UI/pages/article_module/informationUser";
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -144,7 +169,7 @@ public class ArticlePageUIController {
             link = link.replace("/blob/", "/raw/");
             model.addAttribute("pdfUrl", link);
             return "UI/pages/article_module/paperDetailPage";
-        } catch (Exception e) {
+        }  catch (Exception e) {logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -165,6 +190,7 @@ public class ArticlePageUIController {
                     (paperDto.getStatus().equals(PaperStatus.ACCEPT) ? PaperStatus.DELETED.toString() : PaperStatus.REFUSE.toString());
 
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -199,7 +225,7 @@ public class ArticlePageUIController {
             if (userDto == null)
                 return "redirect:/login";
             LocalDateTime now = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss", new Locale("vi", "VN"));
             String formattedDateTime = now.format(formatter);
             LocalDateTime dateTime = LocalDateTime.parse(formattedDateTime, formatter);
             System.out.println(dateTime);
@@ -212,6 +238,7 @@ public class ArticlePageUIController {
             model.addAttribute("CategoryPapers", CategoryPapers);
             return "UI/pages/article_module/addPaperPage";
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -232,15 +259,14 @@ public class ArticlePageUIController {
             //sync
             GitHubRepository.pullDB(enviroment.folderContainGithub);
             paperDto.setAuthor(SystemPageUIController.getUserSession(session));
-
             fileName = StringUtils.cleanPath(img.getOriginalFilename());
             Path uploadDir = Paths.get(enviroment.UserDirectory);
             Path filePath = uploadDir.resolve(fileName);
             Files.copy(img.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             String directoryName = filePath.getParent().toString();
-            String oldFile = directoryName + "\\" + fileName;
-            String newFile = directoryName + "\\" + paperDto.getNamePaper() + "_" + paperDto.getAuthor().getUsername() + ".pdf";
+            String oldFile = directoryName + File.separator + fileName;
+            String newFile = directoryName + File.separator + paperDto.getNamePaper() + "_" + paperDto.getAuthor().getUsername() + ".pdf";
             Resource oldResource = new FileSystemResource(oldFile);
             Resource newResource = new FileSystemResource(newFile);
             if (oldResource.getFile().renameTo(newResource.getFile())) {
@@ -258,17 +284,21 @@ public class ArticlePageUIController {
             LocalDate today = LocalDate.now();
             String urlPaper = paperDto.getNamePaper() + "_" + paperDto.getAuthor().getUsername() + "_" + today.toString().replace("-", "_") + ".pdf";
             if (!checkIfPageNameExist(urlPaper, destinationPath)) {
-                paperDto.setUrl(enviroment.gitHub_allPaper_Url + "/" + urlPaper);
+                paperDto.setUrl(enviroment.gitHub_allPaper_Url + File.separator + urlPaper);
                 PaperDto rs = paperService.addPaper(paperDto);
                 if (rs == null) return "redirect:/system/error404";
+                System.out.println("ten bai bao:"+rs.getNamePaper());
                 UserDto user = rs.getAuthor();
                 user.setLastUserCreated(SystemPageUIController.getNow());
                 rs.setAuthor(user);
                 userService.updateUser(rs.getAuthor());
                 Path sourcePath = Paths.get(newFile);
-                String destinationFilePath = destinationPath + "\\" + urlPaper;
+                String destinationFilePath = destinationPath + File.separator + urlPaper;
+                System.out.println(destinationFilePath);
                 //paperDto.setNamePaper(paperDto.getNamePaper() + "_" + paperDto.getAuthor().getUsername() + "_" + today.toString().replace("-","_"));
                 destinationPath = Paths.get(destinationFilePath);
+                System.out.println("des="+destinationFilePath);
+                System.out.println("source="+sourcePath);
                 Files.copy(sourcePath, destinationPath);
                 GitHubRepository.push2Git("add paper", paperDto.getAuthor().getUsername());
             } else {
@@ -280,6 +310,7 @@ public class ArticlePageUIController {
             return "redirect:/articlePage/viewUploadPage";
 
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return "redirect:/system/error404";
         }
     }
@@ -296,6 +327,7 @@ public class ArticlePageUIController {
                 return false;
             }
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return false;
         }
     }
@@ -351,6 +383,7 @@ public class ArticlePageUIController {
                 model.addAttribute("editRight", false);
             return true;
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return false;
         }
     }

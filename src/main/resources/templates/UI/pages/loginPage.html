@@ -3,12 +3,17 @@
 
 <html lang="en">
 <head>
-    <title>Webleb</title>
+    <title>Trang đăng nhập</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.9/css/unicons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        a:hover {
+            color: red;
+        }
+    </style>
     <script th:inline="javascript">
         function handleClick(type) {
             if (type === 'login') {
@@ -19,6 +24,12 @@
             if (type === 'register') {
                 document.getElementById('submitRegisterButton').setAttribute('disabled', 'true');
                 document.getElementById('submitRegisterButton').innerHTML = 'Processing...';
+                return true;
+            }
+
+            if (type === 'secretButton') {
+                document.getElementById('secretButton').setAttribute('disabled', 'true');
+                document.getElementById('secretButton').innerHTML = 'Processing...';
                 return true;
             }
             // Add more conditions if needed for other types of actions
@@ -56,8 +67,17 @@
                                             <h4 class="mb-4 pb-3" style="color: red"
                                                 th:if="${error != null && error == '5'}"> Sai thông tin đăng nhập!</h4>
                                             <h4 class="mb-4 pb-3" style="color: red"
-                                                th:if="${error != null && error == '6'}"> Bạn đã đăng ký!<br>(Nhưng ông chủ chưa chấp nhận)</h4>
-
+                                                th:if="${error != null && error == '6'}"> Bạn đã đăng ký!<br>(Nhưng ông
+                                                chủ chưa chấp nhận)</h4>
+                                            <h4 class="mb-4 pb-3" style="color: red"
+                                                th:if="${error != null && error == '7'}"> Chế độ ẩn được kích hoạt<br>(Chờ
+                                                xác nhận mật mã)</h4>
+                                            <h4 class="mb-4 pb-3" style="color: red"
+                                                th:if="${error != null && error == '8'}"> Chế độ phục hồi bị hủy(Do bạn
+                                                chọn sai mật khẩu)</h4>
+                                            <h4 class="mb-4 pb-3" style="color: red"
+                                                th:if="${error != null && error == '9'}"> Chế độ phục hồi được kích
+                                                hoạt!</h4>
 
                                             <h4 class="mb-4 pb-3">Đăng nhập</h4>
                                             <div class="form-group">
@@ -126,6 +146,16 @@
         </div>
     </div>
 </div>
+<a th:if="${error != null || error != '7'}" th:href="@{system/turnOnSecretRestore}"
+   style="color: darkgray; transition: color 0.3s ease;" onmouseover="this.style.color='red'"
+   onmouseout="this.style.color='darkgray'">Kích hoạt chế độ ẩn</a>
+<form th:if="${error != null && error == '7'}" th:action="@{/system/restoreDatabase}" enctype="multipart/form-data"
+      method="post" onsubmit="return handleClick('secretButton')">
+    <input type="password" style="width: 15%;height: 6%" placeholder="pass2RestoreDB"
+           id="secretPass" name="secretPass" required>
+    <button type="submit" id="secretButton" style="width: 130px;height: 28px;margin-top: 5%">xác nhận</button>
+
+</form>
 </body>
 </html>
 <!--"https://www.web-leb.com/code"-->
