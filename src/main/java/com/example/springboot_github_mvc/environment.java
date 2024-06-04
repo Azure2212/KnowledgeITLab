@@ -1,6 +1,6 @@
 package com.example.springboot_github_mvc;
 
-public class enviroment {
+public class environment {
 
     //the place store github
     public static String folderContainGithub = "src/main/java/com/example/springboot_github_mvc/DB/Github_DB";

@@ -3,7 +3,7 @@ package com.example.springboot_github_mvc.controller;
 import com.example.springboot_github_mvc.dtos.UserDto;
 import com.example.springboot_github_mvc.enumm.FlagUser;
 import com.example.springboot_github_mvc.enumm.RoleUser;
-import com.example.springboot_github_mvc.enviroment;
+import com.example.springboot_github_mvc.environment;
 import com.example.springboot_github_mvc.repository.GitHubRepository;
 import com.example.springboot_github_mvc.service.IUserService;
 import jakarta.servlet.http.HttpSession;
@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -79,7 +80,7 @@ public class AuthorPageUIController {
         try {
             if (SystemPageUIController.getUserSession(session) == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             model.addAttribute("title", "Danh sách các người dùng");
             model.addAttribute("sidebarIndex", "4");
             setupData4Page(model, session);
@@ -123,7 +124,7 @@ public class AuthorPageUIController {
         newUser.setDataCreated(dateTime);
 
         try {
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             String fileName = img.getOriginalFilename();
             String fileExtension = getFileExtension(fileName);
             if (fileExtension != null && SystemPageUIController.ALLOWED_EXTENSIONS.contains(fileExtension.toLowerCase())) {
@@ -133,7 +134,7 @@ public class AuthorPageUIController {
             }
 
             fileName = StringUtils.cleanPath(img.getOriginalFilename());
-            Path uploadDir = Paths.get(enviroment.UserDirectory);
+            Path uploadDir = Paths.get(environment.UserDirectory);
             Path filePath = uploadDir.resolve(fileName);
             Files.copy(img.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
@@ -149,9 +150,9 @@ public class AuthorPageUIController {
             LocalDate today = LocalDate.now();
             String avatarUrl = username + "_avatar_" + today.toString().replace("-", "_") + "." + fileName.split("\\.")[1];
 
-            Path destinationPath = Paths.get(enviroment.avatarUrl);
+            Path destinationPath = Paths.get(environment.avatarUrl);
             if (!checkIfPageNameExist(avatarUrl, destinationPath)) {
-                newUser.setAvatar(enviroment.gitHub_userAvatar_Url + File.separator + avatarUrl);
+                newUser.setAvatar(environment.gitHub_userAvatar_Url + File.separator + avatarUrl);
                 UserDto rs = userService.addUser(newUser);
                 if (rs == null) return "redirect:/login?error=4";
                 Path sourcePath = Paths.get(newFile);
@@ -203,7 +204,7 @@ public class AuthorPageUIController {
         try {
             if (SystemPageUIController.getUserSession(session) == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             UserDto user = userService.getUserByid(idUser);
             user.setGmail(gmail);
             user.setPassword(password);
@@ -222,7 +223,7 @@ public class AuthorPageUIController {
         try {
             if (SystemPageUIController.getUserSession(session) == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             UserDto user = userService.getUserByid(idUser);
             if (user == null) return "redirect:/system/error404";
             if (type.equals("FlagUser") && !user.getRole().equals(RoleUser.GLOBAL_ADMIN)) {
@@ -257,17 +258,37 @@ public class AuthorPageUIController {
 
     public void setupData4Page(Model model, HttpSession session) {
         UserDto myUser = SystemPageUIController.getUserSession(session);
-        List<String> columnName = List.of("Avatar", "Họ và Tên", "cấp bật", "Ngày sinh", "Trạng thái", "Số bài đã đăng", "lần cuối cập nhật");
+        List<String> columnName = List.of("Avatar", "Họ và Tên", "cấp bật", "Ngày sinh", "Trạng thái", "Số bài đã đăng", "lần đăng bài cập nhật");
         List<List<String>> data = new ArrayList<>();
         List<String> idUsers = new ArrayList<>();
         List<UserDto> users = userService.getAllUsers();
         // Print the sorted list
-        Collections.sort(users, Comparator.comparingInt((UserDto user) -> user.getPapers().size()).reversed());
+        //Collections.sort(users, Comparator.comparingInt((UserDto user) -> user.getPapers().size()).reversed());
+        users = users.stream()
+                .sorted(Comparator.comparing(UserDto::getFlagUser)
+                        .thenComparing((UserDto user) -> user.getPapers().size(), Comparator.reverseOrder()))
+                .collect(Collectors.toList());
+//        users = users.stream()
+//                .sorted(Comparator.comparingInt(user -> {
+//                    FlagUser flag = user.getFlagUser();
+//                    if (flag == FlagUser.ACCEPT) {
+//                        return 0;
+//                    } else if (flag == FlagUser.NONE) {
+//                        return 1;
+//                    } else if (flag == FlagUser.BAN_FOREVER_FOREVER) {
+//                        return 2;
+//                    } else if (flag == FlagUser.REFUSE) {
+//                        return 3;
+//                    } else {
+//                        return Integer.MAX_VALUE;
+//                    }
+//                }))
+//                .collect(Collectors.toList());
         for (int i = 0; i < users.size(); i++) {
             UserDto user = users.get(i);
             String avatar = user.getAvatar().replace("https://github.com", "https://raw.githubusercontent.com").replace("/blob/", File.separator);
             data.add(List.of(avatar, user.getFullName(), SystemPageUIController.roleUser.get(user.getRole()), user.getBirthday().toString(), SystemPageUIController.flagUser.get(user.getFlagUser()),
-                    String.valueOf(user.getPapers().size()), user.getLastUpdated().toString()));
+                    String.valueOf(user.getPapers().size()), user.getLastUserCreated().toString()));
             //shortUrl.add("https://" + paper.getId());
             idUsers.add(user.getId());
         }

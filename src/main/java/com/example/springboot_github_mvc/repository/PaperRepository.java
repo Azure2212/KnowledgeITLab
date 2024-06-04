@@ -1,7 +1,7 @@
 package com.example.springboot_github_mvc.repository;
 
 import com.example.springboot_github_mvc.dtos.PaperDto;
-import com.example.springboot_github_mvc.enviroment;
+import com.example.springboot_github_mvc.environment;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PaperRepository {
 
-    private String paperTableUrl = enviroment.paperTableUrl;
+    private String paperTableUrl = environment.paperTableUrl;
 
     public List<PaperDto> findAll() {
         try {

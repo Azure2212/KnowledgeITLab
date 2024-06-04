@@ -12,7 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/pdfs/**")
-                .addResourceLocations(enviroment.gitHub_allPaper_Url)
+                .addResourceLocations(environment.gitHub_allPaper_Url)
                 .setCachePeriod(0);
         registry.addResourceHandler(
                         "/img/**",

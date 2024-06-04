@@ -1,7 +1,7 @@
 package com.example.springboot_github_mvc.repository;
 
 import com.example.springboot_github_mvc.dtos.UserDto;
-import com.example.springboot_github_mvc.enviroment;
+import com.example.springboot_github_mvc.environment;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -15,7 +15,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserRepository {
-    private String userTableUrl = enviroment.userTableUrl;
+    private String userTableUrl = environment.userTableUrl;
 
     public List<UserDto> findAll() {
         try {

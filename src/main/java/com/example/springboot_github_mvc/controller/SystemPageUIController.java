@@ -1,9 +1,15 @@
 package com.example.springboot_github_mvc.controller;
 
+import com.example.springboot_github_mvc.dtos.PaperDto;
 import com.example.springboot_github_mvc.dtos.UserDto;
 import com.example.springboot_github_mvc.enumm.FlagUser;
+import com.example.springboot_github_mvc.enumm.PaperStatus;
 import com.example.springboot_github_mvc.enumm.RoleUser;
+import com.example.springboot_github_mvc.environment;
 import com.example.springboot_github_mvc.repository.GitHubRepository;
+import com.example.springboot_github_mvc.repository.PaperRepository;
+import com.example.springboot_github_mvc.service.IPaperService;
+import com.example.springboot_github_mvc.service.IUserService;
 import com.example.springboot_github_mvc.service.impl.SystemServiceImpl;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +21,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Controller
 @RequiredArgsConstructor
@@ -33,9 +45,6 @@ public class SystemPageUIController {
         flagUser.put(FlagUser.REFUSE, "Đã từ chối");
         flagUser.put(FlagUser.NONE, "Đã đăng ký");
         flagUser.put(FlagUser.ACCEPT, "Đã chấp nhập");
-        flagUser.put(FlagUser.BAN_7, "Cấm 7 ngày");
-        flagUser.put(FlagUser.BAN_15, "Cấm 15 ngày");
-        flagUser.put(FlagUser.BAN_30, "Cấm 30 ngày");
         flagUser.put(FlagUser.BAN_FOREVER_FOREVER, "Cấm vĩnh viễn");
 
         roleUser.put(RoleUser.GLOBAL_ADMIN, "Ông chủ");
@@ -46,6 +55,10 @@ public class SystemPageUIController {
         roleUser.put(RoleUser.BRONZE_USER, "BRONZE");
         roleUser.put(RoleUser.NONE, "TBA");
     }
+
+    private final IPaperService paperService;
+    private final IUserService userService;
+    private final PaperRepository paperRepository;
 
     @GetMapping("error404")
     public String viewErrorPage(HttpSession session) {
@@ -93,7 +106,7 @@ public class SystemPageUIController {
     }
 
     public static UserDto getUserSession(HttpSession session) {
-        if(session.getAttribute("sessionTime") == null) return null;
+        if (session.getAttribute("sessionTime") == null) return null;
         if (session.getAttribute("user") != null) {
             SystemServiceImpl systemService = new SystemServiceImpl();
             UserDto user = (UserDto) session.getAttribute("user");
@@ -134,21 +147,66 @@ public class SystemPageUIController {
     }
 
 
-//    @GetMapping("/test")
-//    public String totest() {
-//        return "UI/pages/article_module/informationUser";
-//    }
-//
-//    @GetMapping("takeHeaderCss")
-//    public String takeHeaderCss() {
-//        System.out.println("UI/util/header/header.empty");
-//        return "static/css/main.css";
-//    }
+    @GetMapping("removeAllRubbishData")
+    public String removeAllRubbishData() {
+        try {
+            GitHubRepository.pullDB(environment.folderContainGithub);
+            List<PaperDto> papers = paperService.getAllPaperByStatus(PaperStatus.DELETED);
+            papers.addAll(paperService.getAllPaperByStatus(PaperStatus.REFUSE));
 
-//    @GetMapping("/footer")
-//    public String totestfooter() {
-//        return "UI/pages/util/footer/footer";
-//    }
+            List<String> fileNames = new ArrayList<>();
+            String folderPath = "src/main/java/com/example/springboot_github_mvc/DB/Github_DB/allAcceptedPaper";
+
+            try (Stream<Path> paths = Files.walk(Paths.get(folderPath))) {
+                paths.filter(Files::isRegularFile)
+                        .map(Path::getFileName)
+                        .map(Path::toString)
+                        .forEach(fileNames::add);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            List<String> url2removed = new ArrayList<>();
+            for (PaperDto p : papers) {
+                for (String f : fileNames) {
+                    String url = p.getUrl().replace("https://github.com/azurebob2212/knowledgeTreeDocumentDataLab/blob/main/allAcceptedPaper",
+                            environment.allPapers);
+                    if (url.equals(environment.allPapers + "/" + f)) {
+                        url2removed.add((url + File.separator + f));
+                    }
+                }
+            }
+            for(String i: url2removed){
+                File file = new File(i);
+
+                // Check if the file exists
+                if (file.exists()) {
+                    // Attempt to delete the file
+                    boolean deleted = file.delete();
+
+                    // Check if the file was successfully deleted
+                    if (deleted) {
+                        System.out.println("File deleted successfully.");
+                    } else {
+                        System.out.println("Failed to delete the file.");
+                    }
+                } else {
+                    System.out.println("File does not exist.");
+                }
+            }
+
+            for(PaperDto i: papers){
+                PaperDto rs = paperService.deletePaper(i);
+            }
+            List<UserDto> userAfterUpdated = userService.getAllUsers();
+            for(UserDto user: userAfterUpdated)
+                userService.updateUser(user);
+            GitHubRepository.push2Git("reset","azure");
+            return "redirect:/articlePage/viewUploadPage";
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return "redirect:/login?error=8";
+        }
+    }
 
     public static LocalDateTime getNow() {
         LocalDateTime now = LocalDateTime.now();

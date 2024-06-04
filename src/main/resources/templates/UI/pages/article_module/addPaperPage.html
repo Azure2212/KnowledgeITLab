@@ -52,6 +52,11 @@
                             Đăng xuất
                         </a>
                     </li>
+                    <li class="nav-item" th:if="${editRight != null and editRight == true}">
+                        <a class="nav-link" th:href="@{../system/removeAllRubbishData}">
+                            Xóa các tài liệu hủy/xóa
+                        </a>
+                    </li>
                 </ul>
             </div>
         </nav>

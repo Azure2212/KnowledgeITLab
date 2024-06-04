@@ -6,7 +6,7 @@ import com.example.springboot_github_mvc.dtos.UserDto;
 import com.example.springboot_github_mvc.enumm.CategoryPaper;
 import com.example.springboot_github_mvc.enumm.PaperStatus;
 import com.example.springboot_github_mvc.enumm.RoleUser;
-import com.example.springboot_github_mvc.enviroment;
+import com.example.springboot_github_mvc.environment;
 import com.example.springboot_github_mvc.repository.GitHubRepository;
 import com.example.springboot_github_mvc.service.IPaperService;
 import com.example.springboot_github_mvc.service.IUserService;
@@ -67,7 +67,7 @@ public class ArticlePageUIController {
         try {
             if (SystemPageUIController.getUserSession(session) == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             setupData4Page(model, PaperStatus.ACCEPT, session, null);
             model.addAttribute("title", "Danh sách các bài viết đã đăng");
             model.addAttribute("sidebarIndex", "0");
@@ -83,7 +83,7 @@ public class ArticlePageUIController {
         try {
             if (SystemPageUIController.getUserSession(session) == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             PaperStatus status = (paperStatus.equals(PaperStatus.DELETED.toString())) ? PaperStatus.DELETED : PaperStatus.REFUSE;
             setupData4Page(model, status, session, null);
             model.addAttribute("title", "Danh sách các bài viết đã xóa" + (status.equals(PaperStatus.DELETED) ? " sau khi đăng" : " sau khi đăng ký"));
@@ -100,7 +100,7 @@ public class ArticlePageUIController {
         try {
             if (SystemPageUIController.getUserSession(session) == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             setupData4Page(model, PaperStatus.WAITING_UPLOAD, session, null);
             model.addAttribute("title", "Danh sách các bài viết đang chờ duyệt");
             model.addAttribute("sidebarIndex", "1");
@@ -117,7 +117,7 @@ public class ArticlePageUIController {
             UserDto user = SystemPageUIController.getUserSession(session);
             if (user == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             PaperDto paper = paperService.getPaperById(idPaper);
             if(paper == null) return "redirect:/login";
             paper.setStatus(PaperStatus.ACCEPT);
@@ -136,7 +136,7 @@ public class ArticlePageUIController {
             UserDto user = SystemPageUIController.getUserSession(session);
             if (user == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             UserDto userIn4 = user;
             if (idPaper != null) {
                 PaperDto paperDto = paperService.getPaperById(idPaper);
@@ -179,7 +179,7 @@ public class ArticlePageUIController {
         try {
             if (SystemPageUIController.getUserSession(session) == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             PaperDto paperDto = paperService.getPaperById(idPaper);
             if (paperDto == null) return "redirect:/system/error404";
             if (paperDto.getStatus().equals(PaperStatus.DELETED)) paperDto.setStatus(PaperStatus.ACCEPT);
@@ -200,7 +200,7 @@ public class ArticlePageUIController {
         try {
             if (SystemPageUIController.getUserSession(session) == null)
                 return "redirect:/login";
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             PaperDto paperDto = paperService.getPaperById(idPaper);
             if (paperDto == null) return "redirect:/system/error404";
             if (paperDto.getStatus().equals(PaperStatus.ACCEPT)) paperDto.setStatus(PaperStatus.DELETED);
@@ -257,10 +257,10 @@ public class ArticlePageUIController {
                 return "redirect:/articlePage/addPaperForm";
             }
             //sync
-            GitHubRepository.pullDB(enviroment.folderContainGithub);
+            GitHubRepository.pullDB(environment.folderContainGithub);
             paperDto.setAuthor(SystemPageUIController.getUserSession(session));
             fileName = StringUtils.cleanPath(img.getOriginalFilename());
-            Path uploadDir = Paths.get(enviroment.UserDirectory);
+            Path uploadDir = Paths.get(environment.UserDirectory);
             Path filePath = uploadDir.resolve(fileName);
             Files.copy(img.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
@@ -272,7 +272,7 @@ public class ArticlePageUIController {
             if (oldResource.getFile().renameTo(newResource.getFile())) {
                 System.out.println("File renamed successfully");
             }
-            Path destinationPath = Paths.get(enviroment.allPapers);
+            Path destinationPath = Paths.get(environment.allPapers);
             ;
 
             if (paperDto.getAuthor().getRole().equals(RoleUser.GLOBAL_ADMIN) || paperDto.getAuthor().getRole().equals(RoleUser.ADMIN)) {
@@ -284,7 +284,7 @@ public class ArticlePageUIController {
             LocalDate today = LocalDate.now();
             String urlPaper = paperDto.getNamePaper() + "_" + paperDto.getAuthor().getUsername() + "_" + today.toString().replace("-", "_") + ".pdf";
             if (!checkIfPageNameExist(urlPaper, destinationPath)) {
-                paperDto.setUrl(enviroment.gitHub_allPaper_Url + File.separator + urlPaper);
+                paperDto.setUrl(environment.gitHub_allPaper_Url + File.separator + urlPaper);
                 PaperDto rs = paperService.addPaper(paperDto);
                 if (rs == null) return "redirect:/system/error404";
                 System.out.println("ten bai bao:"+rs.getNamePaper());
