@@ -152,7 +152,7 @@ public class AuthorPageUIController {
 
             Path destinationPath = Paths.get(environment.avatarUrl);
             if (!checkIfPageNameExist(avatarUrl, destinationPath)) {
-                newUser.setAvatar(environment.gitHub_userAvatar_Url + File.separator + avatarUrl);
+                newUser.setAvatar(environment.gitHub_userAvatar_Url + File.separator + avatarUrl.replaceAll(" ","%20"));
                 UserDto rs = userService.addUser(newUser);
                 if (rs == null) return "redirect:/login?error=4";
                 Path sourcePath = Paths.get(newFile);

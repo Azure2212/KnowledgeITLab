@@ -284,7 +284,7 @@ public class ArticlePageUIController {
             LocalDate today = LocalDate.now();
             String urlPaper = paperDto.getNamePaper() + "_" + paperDto.getAuthor().getUsername() + "_" + today.toString().replace("-", "_") + ".pdf";
             if (!checkIfPageNameExist(urlPaper, destinationPath)) {
-                paperDto.setUrl(environment.gitHub_allPaper_Url + File.separator + urlPaper);
+                paperDto.setUrl(environment.gitHub_allPaper_Url + File.separator + urlPaper.replaceAll(" ","%20"));
                 PaperDto rs = paperService.addPaper(paperDto);
                 if (rs == null) return "redirect:/system/error404";
                 System.out.println("ten bai bao:"+rs.getNamePaper());
